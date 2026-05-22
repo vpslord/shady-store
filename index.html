@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="dark">
+<head>
+  <!-- ══════════════════════════════════════════════════════
+       Shady Store POS · index.html
+       Progressive Web App · Bilingual EN/AR · Dark/Light
+  ══════════════════════════════════════════════════════ -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Shady Store — Modern Point of Sale System" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ShadyStore" />
+
+  <title>Shady Store POS</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Apple touch icons (fallback PNGs not required for GitHub Pages demo) -->
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <!-- ── Google Fonts ── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- ── Tailwind CSS ── -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Sora', 'IBM Plex Sans Arabic', 'sans-serif'],
+          },
+          colors: {
+            indigo: {
+              950: '#1e1b4b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- ── Font Awesome ── -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- ══════════════════════════════════════════════════════
+       Custom CSS
+  ══════════════════════════════════════════════════════ -->
+  <style>
+    /* ── Base ── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      font-family: 'Sora', 'IBM Plex Sans Arabic', sans-serif;
+      overflow: hidden;
+    }
+
+    /* Arabic font enhancement */
+    [lang="ar"] body,
+    [dir="rtl"] { font-family: 'IBM Plex Sans Arabic', 'Sora', sans-serif; }
+
+    /* ── CSS Variables ── */
+    :root {
+      --sidebar-width: 240px;
+      --sidebar-collapsed: 64px;
+      --header-h: 60px;
+      --transition: 0.22s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+    /* ── App shell ── */
+    #app {
+      display: flex;
+      height: 100vh;
+      background: #f1f5f9;
+      transition: background var(--transition);
+    }
+    .dark #app { background: #0f172a; }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: var(--sidebar-width);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      background: #1e293b;
+      border-inline-end: 1px solid rgba(255,255,255,0.06);
+      transition: width var(--transition), transform var(--transition);
+      z-index: 50;
+      overflow: hidden;
+    }
+    .dark #sidebar { background: #0f172a; }
+    .light-theme #sidebar { background: #1e293b; }
+
+    #sidebar.collapsed { width: var(--sidebar-collapsed); }
+    #sidebar.collapsed .sidebar-label { display: none; }
+    #sidebar.collapsed .sidebar-brand-text { display: none; }
+
+    /* Mobile sidebar */
+    @media (max-width: 1023px) {
+      #sidebar {
+        position: fixed;
+        inset-block: 0;
+        inset-inline-start: 0;
+        transform: translateX(-100%);
+        width: var(--sidebar-width) !important;
+        z-index: 200;
+      }
+      [dir="rtl"] #sidebar { transform: translateX(100%); }
+      #sidebar.sidebar-open { transform: translateX(0); }
+    }
+
+    /* ── Main area ── */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    /* ── Top bar ── */
+    #topbar {
+      height: var(--header-h);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      z-index: 40;
+    }
+    .dark #topbar {
+      background: #1e293b;
+      border-bottom-color: rgba(255,255,255,0.06);
+    }
+
+    /* ── Page content ── */
+    #pageContent {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 0;
+    }
+
+    /* For POS page — full height flex */
+    #pageContent.pos-layout { overflow: hidden; display: flex; flex-direction: column; }
+
+    /* ── Component classes ── */
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+    }
+    .dark .card {
+      background: #1e293b;
+      border-color: rgba(255,255,255,0.06);
+    }
+
+    .input-field {
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.625rem;
+      border: 1.5px solid #e2e8f0;
+      background: #f8fafc;
+      color: #0f172a;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .dark .input-field {
+      background: #0f172a;
+      border-color: #334155;
+      color: #f1f5f9;
+    }
+    .input-field:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    }
+    select.input-field { cursor: pointer; }
+
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .dark .form-label { color: #94a3b8; }
+
+    .btn-primary {
+      padding: 0.5rem 1.25rem;
+      border-radius: 0.625rem;
+      background: #6366f1;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .btn-primary:hover { background: #4f46e5; box-shadow: 0 4px 12px rgba(99,102,241,0.35); }
+    .btn-primary:active { transform: scale(0.97); }
+
+    .btn-secondary {
+      padding: 0.5rem 1.25rem;
+      border-radius: 0.625rem;
+      background: transparent;
+      color: #475569;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border: 1.5px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dark .btn-secondary { color: #94a3b8; border-color: #334155; }
+    .btn-secondary:hover { background: #f1f5f9; }
+    .dark .btn-secondary:hover { background: #0f172a; }
+
+    .btn-danger {
+      padding: 0.5rem 1.25rem;
+      border-radius: 0.625rem;
+      background: transparent;
+      color: #ef4444;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border: 1.5px solid #fecaca;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dark .btn-danger { border-color: #7f1d1d; }
+    .btn-danger:hover { background: #fee2e2; }
+    .dark .btn-danger:hover { background: #450a0a; }
+
+    .btn-icon {
+      width: 2rem; height: 2rem;
+      border-radius: 0.5rem;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .btn-icon:hover { background: rgba(0,0,0,0.06); }
+    .dark .btn-icon:hover { background: rgba(255,255,255,0.08); }
+
+    .btn-icon-sm {
+      width: 1.75rem; height: 1.75rem;
+      border-radius: 0.4rem;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+      font-size: 0.8rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.6rem;
+      border-radius: 99px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: #e0e7ff;
+      color: #4338ca;
+    }
+    .dark .badge { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+    .badge-green { background: #dcfce7; color: #16a34a; }
+    .dark .badge-green { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .badge-blue { background: #dbeafe; color: #2563eb; }
+    .dark .badge-blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+
+    /* ── Modals ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.hidden { display: none; }
+
+    .modal-box {
+      background: #ffffff;
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 32rem;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+    }
+    .dark .modal-box {
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    /* ── Sidebar overlay (mobile) ── */
+    #sidebarOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 199;
+      background: rgba(0,0,0,0.5);
+    }
+
+    /* ── Transitions for cart badge ── */
+    #cartBadge { transition: transform 0.2s, background 0.2s; }
+
+    /* ── Product card hover animation ── */
+    .product-card { transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; }
+
+    /* ── POS full height layout ── */
+    .pos-outer { flex: 1; display: flex; overflow: hidden; }
+
+    /* ── Responsive POS cart ── */
+    @media (max-width: 1023px) {
+      .pos-outer { flex-direction: column; }
+    }
+
+    /* ══════════════════════════════════════════════════════
+       PRINT STYLES — 80mm Thermal Receipt
+    ══════════════════════════════════════════════════════ */
+    @media print {
+      /* Hide everything */
+      body > * { display: none !important; }
+      /* Show only receipt */
+      #printArea { display: block !important; }
+    }
+
+    #printArea { display: none; }
+
+    /* ── Light theme tweaks ── */
+    :not(.dark) .dark\:bg-slate-900 { background: #ffffff; }
+
+    /* ── Nav active indicator ── */
+    .nav-btn { position: relative; }
+    .nav-btn::before {
+      content: '';
+      position: absolute;
+      inset-inline-start: 0;
+      top: 50%;
+      transform: translateY(-50%) scaleY(0);
+      width: 3px;
+      height: 60%;
+      border-radius: 0 2px 2px 0;
+      background: #6366f1;
+      transition: transform 0.15s;
+    }
+
+    /* ── Loading indicator ── */
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Smooth page transition ── */
+    #pageContent > * { animation: fadeIn 0.18s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  </style>
+</head>
+
+<body class="antialiased">
+
+<!-- ══════════════════════════════════════════════════════
+     App Shell
+══════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ── Sidebar Overlay (mobile) ── -->
+  <div id="sidebarOverlay" class="hidden" onclick="toggleSidebar()"></div>
+
+  <!-- ══════════════════════════════
+       Sidebar
+  ══════════════════════════════ -->
+  <aside id="sidebar" aria-label="Sidebar navigation">
+
+    <!-- Brand -->
+    <div class="flex items-center gap-3 px-4 py-4 border-b border-white/5 flex-shrink-0">
+      <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-900/40">
+        <i class="fa-solid fa-store text-white text-sm"></i>
+      </div>
+      <div class="sidebar-brand-text min-w-0">
+        <p id="appName" class="text-white font-bold text-sm truncate leading-tight">Shady Store</p>
+        <p class="text-slate-500 text-xs">POS System</p>
+      </div>
+    </div>
+
+    <!-- Nav items -->
+    <nav id="sidebarNav" class="flex-1 p-3 space-y-1 overflow-y-auto"></nav>
+
+    <!-- Bottom actions -->
+    <div class="p-3 border-t border-white/5 space-y-1 flex-shrink-0">
+      <!-- Language toggle -->
+      <button id="langToggle"
+        onclick="toggleLanguage()"
+        class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-400 hover:bg-white/10 hover:text-white transition-all text-sm font-medium">
+        <i class="fa-solid fa-globe w-5 text-center text-lg"></i>
+        <span class="sidebar-label" id="langLabel">العربية</span>
+      </button>
+      <!-- Theme toggle -->
+      <button id="themeToggle"
+        onclick="toggleTheme()"
+        class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-400 hover:bg-white/10 hover:text-white transition-all text-sm font-medium">
+        <span id="themeIcon" class="w-5 text-center text-lg"><i class="fa-solid fa-sun text-amber-400"></i></span>
+        <span class="sidebar-label" id="themeLabel">Light Mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════
+       Main Area
+  ══════════════════════════════ -->
+  <div id="main">
+
+    <!-- Top Bar -->
+    <header id="topbar">
+      <div class="flex items-center gap-3">
+        <!-- Mobile menu toggle -->
+        <button onclick="toggleSidebar()" class="btn-icon lg:hidden text-slate-500 dark:text-slate-400" aria-label="Toggle sidebar">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <!-- Desktop sidebar collapse -->
+        <button onclick="toggleSidebarCollapse()" class="btn-icon hidden lg:flex text-slate-500 dark:text-slate-400" aria-label="Collapse sidebar">
+          <i class="fa-solid fa-sidebar text-lg"></i>
+        </button>
+        <!-- Page breadcrumb -->
+        <h1 id="pageTitle" class="text-base font-semibold text-slate-800 dark:text-white hidden sm:block">Point of Sale</h1>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Search hint for POS barcode -->
+        <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs">
+          <i class="fa-solid fa-barcode"></i>
+          <span>Barcode Ready</span>
+        </div>
+        <!-- Theme toggle (topbar shortcut) -->
+        <button id="themeToggleTop" onclick="toggleTheme()"
+          class="btn-icon w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-100 dark:hover:bg-slate-700"
+          title="Toggle theme">
+          <i class="fa-solid fa-sun text-amber-500 dark:block hidden"></i>
+          <i class="fa-solid fa-moon text-indigo-500 dark:hidden"></i>
+        </button>
+        <!-- Language toggle (topbar shortcut) -->
+        <button onclick="toggleLanguage()"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-100 dark:hover:bg-slate-700 text-xs font-semibold transition-colors">
+          <i class="fa-solid fa-globe text-indigo-500"></i>
+          <span id="topLangLabel">عربي</span>
+        </button>
+        <!-- User avatar -->
+        <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+          SS
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div id="pageContent" class="flex-1 overflow-y-auto">
+      <!-- Rendered by JavaScript -->
+      <div class="flex items-center justify-center h-full">
+        <div class="flex flex-col items-center gap-3 text-slate-400">
+          <i class="fa-solid fa-store text-5xl spin"></i>
+          <p class="text-sm">Loading Shady Store…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden print area (for direct window.print() fallback) -->
+<div id="printArea"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     Scripts
+══════════════════════════════════════════════════════ -->
+<script src="translations.js"></script>
+<script src="app.js"></script>
+<script>
+  /* ── Extra UI helpers (keep in HTML for clarity) ── */
+
+  function toggleTheme() {
+    const newTheme = state.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+    state.settings.theme = newTheme;
+    DB.setSettings(state.settings);
+    updateThemeTopBtn();
+  }
+
+  function updateThemeTopBtn() {
+    // The top bar uses CSS dark: classes — no JS needed
+    // Just update sidebar button label
+    const label = document.getElementById('themeLabel');
+    if (label) label.textContent = state.theme === 'dark' ? t('lightMode') : t('darkMode');
+  }
+
+  function toggleLanguage() {
+    const newLang = state.lang === 'en' ? 'ar' : 'en';
+    state.settings.lang = newLang;
+    DB.setSettings(state.settings);
+    applyLanguage(newLang);
+    updateLangLabels();
+  }
+
+  function updateLangLabels() {
+    const sidebarLabel = document.getElementById('langLabel');
+    const topLabel     = document.getElementById('topLangLabel');
+    if (sidebarLabel) sidebarLabel.textContent = state.lang === 'en' ? 'العربية' : 'English';
+    if (topLabel)     topLabel.textContent     = state.lang === 'en' ? 'عربي'    : 'EN';
+  }
+
+  function toggleSidebarCollapse() {
+    document.getElementById('sidebar')?.classList.toggle('collapsed');
+  }
+
+  // Update page title in topbar when navigating
+  const _origNavigateTo = navigateTo;
+  navigateTo = function(pageId) {
+    _origNavigateTo(pageId);
+    const titles = {
+      pos: 'nav_pos', products: 'nav_products',
+      dashboard: 'nav_dashboard', history: 'nav_history', settings: 'nav_settings'
+    };
+    const el = document.getElementById('pageTitle');
+    if (el) el.textContent = t(titles[pageId] || 'nav_pos');
+
+    // POS page needs full-height flex layout
+    const content = document.getElementById('pageContent');
+    if (pageId === 'pos') {
+      content.classList.add('pos-layout');
+      content.style.overflowY = 'hidden';
+    } else {
+      content.classList.remove('pos-layout');
+      content.style.overflowY = 'auto';
+    }
+  };
+
+  // After DOMContentLoaded, fix POS layout for default page
+  document.addEventListener('DOMContentLoaded', () => {
+    const content = document.getElementById('pageContent');
+    if (content) {
+      content.classList.add('pos-layout');
+      content.style.overflowY = 'hidden';
+    }
+    updateLangLabels();
+  });
+</script>
+</body>
+</html>
