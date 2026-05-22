@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Shady Store — Fast, offline-ready Point of Sale system" />
+  <meta name="theme-color" content="#6366f1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Shady Store" />
+
+  <title>Shady Store POS</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="./manifest.json" />
+
+  <!-- Favicon (inline SVG) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%236366f1'/%3E%3Ctext y='.9em' font-size='75' x='12' font-family='Georgia,serif' fill='white'%3ES%3C/text%3E%3C/svg%3E" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#6366f1', dark: '#4f46e5', light: '#818cf8' },
+          },
+          fontFamily: {
+            sans: ['"Geist"', '"Noto Sans Arabic"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            mono: ['"Geist Mono"', 'ui-monospace', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       CUSTOM CSS — Shady Store POS
+    ═══════════════════════════════════════════════════════════ */
+
+    /* ── Base ── */
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      --brand: #6366f1;
+      --brand-dark: #4f46e5;
+      --brand-light: #818cf8;
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Geist', 'Noto Sans Arabic', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+    /* ── Light Mode ── */
+    html:not(.dark) body  { background: #f1f5f9; color: #1e293b; }
+    html:not(.dark) .card { background: #ffffff; border-color: #e2e8f0; }
+    html:not(.dark) .sidebar { background: #ffffff; border-color: #e2e8f0; }
+    html:not(.dark) .topbar { background: #ffffff; border-color: #e2e8f0; }
+    html:not(.dark) .product-card { background: #ffffff; border-color: #e2e8f0; }
+    html:not(.dark) .product-card:hover { border-color: var(--brand); }
+    html:not(.dark) .cart-panel { background: #ffffff; border-color: #e2e8f0; }
+    html:not(.dark) .cart-item { border-color: #e2e8f0; }
+    html:not(.dark) .nav-btn { color: #64748b; }
+    html:not(.dark) .nav-btn.nav-active { background: #ede9fe; color: var(--brand); }
+    html:not(.dark) .nav-btn:not(.nav-active):hover { background: #f8fafc; }
+    html:not(.dark) .modal-box { background: #ffffff; }
+    html:not(.dark) .table-row { border-color: #e2e8f0; color: #1e293b; }
+    html:not(.dark) .action-btn { background: #f1f5f9; color: #475569; }
+    html:not(.dark) .action-btn:hover { background: #e2e8f0; }
+    html:not(.dark) .action-btn.danger:hover { background: #fee2e2; color: #dc2626; }
+    html:not(.dark) input, html:not(.dark) select, html:not(.dark) textarea {
+      background: #f8fafc; border-color: #cbd5e1; color: #1e293b;
+    }
+    html:not(.dark) input:focus, html:not(.dark) select:focus { border-color: var(--brand); }
+    html:not(.dark) .stat-card { background: #ffffff; }
+    html:not(.dark) .bottom-nav { background: #ffffff; border-color: #e2e8f0; }
+
+    /* ── App Layout ── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 100%;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      height: 56px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      z-index: 50;
+    }
+    .topbar-logo {
+      width: 32px; height: 32px;
+      background: var(--brand);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: Georgia, serif;
+      font-size: 18px; font-weight: bold;
+      color: #fff; flex-shrink: 0;
+    }
+
+    /* ── Main content area ── */
+    #main-content {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* ── Desktop Sidebar ── */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: #0f172a;
+      border-inline-end: 1px solid #1e293b;
+      display: none;
+      flex-direction: column;
+      padding: 12px 8px;
+      overflow-y: auto;
+    }
+    @media (min-width: 1024px) {
+      .sidebar { display: flex; }
+    }
+    .sidebar-nav-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      font-size: 14px; font-weight: 500;
+      color: #94a3b8; cursor: pointer;
+      border: none; background: none; width: 100%;
+      text-align: start; transition: all 0.15s;
+      margin-bottom: 2px;
+    }
+    .sidebar-nav-btn:hover   { background: #1e293b; color: #e2e8f0; }
+    .sidebar-nav-btn.nav-active { background: #312e81; color: #a5b4fc; }
+    .sidebar-nav-btn i { width: 18px; text-align: center; }
+
+    /* ── View container ── */
+    #view-container {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── POS Layout ── */
+    #pos-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    #pos-products-panel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+    /* Desktop cart panel */
+    .cart-panel-desktop {
+      display: none;
+      width: 320px;
+      flex-shrink: 0;
+      flex-direction: column;
+      border-inline-start: 1px solid #1e293b;
+      background: #0c1527;
+    }
+    @media (min-width: 1024px) {
+      .cart-panel-desktop { display: flex; }
+    }
+
+    /* ── Category chips ── */
+    #category-filters {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+    #category-filters::-webkit-scrollbar { display: none; }
+    .cat-chip {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px; font-weight: 500;
+      background: #1e293b; color: #94a3b8;
+      border: 1px solid #334155;
+      cursor: pointer; transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .cat-chip:hover  { border-color: var(--brand-light); color: #e2e8f0; }
+    .cat-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+    html:not(.dark) .cat-chip { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+    html:not(.dark) .cat-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+    /* ── Product Grid ── */
+    #product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    @media (min-width: 480px) { #product-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); } }
+
+    .product-card {
+      position: relative;
+      background: #1e293b;
+      border: 1.5px solid #334155;
+      border-radius: 14px;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.18s;
+      min-height: 130px;
+      text-align: center;
+    }
+    .product-card:hover:not(:disabled) {
+      border-color: var(--brand);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(99,102,241,0.18);
+    }
+    .product-card:active:not(:disabled) { transform: scale(0.97); }
+    .product-card-icon { font-size: 28px; line-height: 1; }
+    .product-card-body { width: 100%; }
+    .product-card-name { font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; line-height: 1.3; }
+    html:not(.dark) .product-card-name { color: #1e293b; }
+    .product-card-price { font-size: 14px; font-weight: 700; color: var(--brand-light); margin-top: 4px; }
+    .product-cart-qty {
+      position: absolute; top: 8px; inset-inline-end: 8px;
+      background: var(--brand); color: #fff;
+      border-radius: 9999px; width: 22px; height: 22px;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block; padding: 2px 8px;
+      border-radius: 9999px; font-size: 10px; font-weight: 600;
+    }
+    .badge-red   { background: #450a0a; color: #fca5a5; }
+    .badge-amber { background: #451a03; color: #fcd34d; }
+    .badge-green { background: #052e16; color: #86efac; }
+    html:not(.dark) .badge-red   { background: #fee2e2; color: #dc2626; }
+    html:not(.dark) .badge-amber { background: #fef9c3; color: #d97706; }
+    html:not(.dark) .badge-green { background: #dcfce7; color: #16a34a; }
+
+    /* ── Cart Panel (shared styles) ── */
+    .cart-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid #1e293b;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    html:not(.dark) .cart-header { border-color: #e2e8f0; }
+    #cart-items {
+      flex: 1; overflow-y: auto; padding: 8px 12px;
+    }
+    .cart-item {
+      display: flex; align-items: center;
+      gap: 8px; padding: 10px 4px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .cart-item-name  { flex: 1; font-size: 13px; font-weight: 500; color: #e2e8f0; }
+    html:not(.dark) .cart-item-name { color: #1e293b; }
+    .cart-item-price { font-size: 13px; font-weight: 700; color: var(--brand-light); min-width: 80px; text-align: end; }
+    .cart-item-controls { display: flex; align-items: center; gap: 4px; }
+    .qty-btn {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: #334155; color: #e2e8f0;
+      display: flex; align-items: center; justify-content: center;
+      border: none; cursor: pointer; transition: background 0.12s;
+      flex-shrink: 0;
+    }
+    .qty-btn:hover { background: var(--brand); }
+    .qty-input {
+      width: 40px; height: 28px; border-radius: 6px;
+      background: #0f172a; border: 1px solid #334155;
+      color: #e2e8f0; text-align: center;
+      font-size: 13px; padding: 0 4px;
+    }
+    .remove-btn {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: #1e293b; color: #f87171;
+      display: flex; align-items: center; justify-content: center;
+      border: none; cursor: pointer; transition: background 0.12s;
+      flex-shrink: 0;
+    }
+    .remove-btn:hover { background: #450a0a; }
+    #cart-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #1e293b;
+      flex-shrink: 0;
+    }
+    html:not(.dark) #cart-footer { border-color: #e2e8f0; }
+    .cart-total-row {
+      display: flex; justify-content: space-between;
+      font-size: 13px; color: #94a3b8; padding: 3px 0;
+    }
+    .cart-grand-total {
+      display: flex; justify-content: space-between;
+      font-size: 16px; font-weight: 700; color: #e2e8f0;
+      padding: 6px 0 12px;
+      border-top: 1px solid #334155; margin-top: 4px;
+    }
+    html:not(.dark) .cart-grand-total { color: #1e293b; }
+
+    /* ── Mobile Cart Drawer ── */
+    #cart-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 100; backdrop-filter: blur(2px);
+    }
+    #cart-drawer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 75dvh;
+      background: #0f172a;
+      border-radius: 20px 20px 0 0;
+      z-index: 101;
+      display: flex; flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+    }
+    html:not(.dark) #cart-drawer { background: #ffffff; }
+    #cart-drawer.cart-open { transform: translateY(0); }
+    @media (min-width: 1024px) {
+      #cart-drawer, #cart-overlay { display: none !important; }
+    }
+
+    /* ── Mobile Cart Trigger ── */
+    #cart-fab {
+      position: fixed; bottom: 72px; inset-inline-end: 16px;
+      background: var(--brand); color: white;
+      border-radius: 14px; padding: 12px 18px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.5);
+      cursor: pointer; z-index: 90; border: none;
+      transition: all 0.2s;
+    }
+    #cart-fab:hover { background: var(--brand-dark); transform: scale(1.04); }
+    @media (min-width: 1024px) { #cart-fab { display: none; } }
+
+    /* ── Bottom Nav (mobile) ── */
+    .bottom-nav {
+      background: #0f172a;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      height: 60px;
+      flex-shrink: 0;
+    }
+    @media (min-width: 1024px) { .bottom-nav { display: none; } }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 3px; font-size: 10px; font-weight: 500;
+      color: #64748b; background: none; border: none;
+      cursor: pointer; transition: all 0.15s;
+      padding: 6px 0;
+    }
+    .nav-btn i { font-size: 18px; }
+    .nav-btn.nav-active { color: var(--brand-light); }
+    .nav-btn:not(.nav-active):hover { color: #94a3b8; }
+
+    /* ── Cards ── */
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    /* ── Stat Cards ── */
+    .stat-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 18px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .stat-value { font-size: 24px; font-weight: 800; }
+    .stat-label { font-size: 12px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── Tables ── */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .data-table th { padding: 10px 12px; text-align: start; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #1e293b; }
+    .table-row td { padding: 10px 12px; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+    html:not(.dark) .data-table th { border-color: #e2e8f0; }
+    html:not(.dark) .table-row td { border-color: #e2e8f0; }
+    .table-row:hover td { background: #1e293b20; }
+
+    /* ── Action Buttons ── */
+    .action-btn {
+      padding: 5px 10px; border-radius: 7px;
+      font-size: 12px; font-weight: 500;
+      background: #1e293b; color: #94a3b8;
+      border: 1px solid #334155;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .action-btn:hover { background: #334155; color: #e2e8f0; }
+    .action-btn.danger:hover { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
+
+    /* ── Form Inputs ── */
+    .form-input {
+      width: 100%; padding: 10px 12px;
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 10px; color: #e2e8f0;
+      font-size: 14px; font-family: inherit;
+      outline: none; transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+    .form-label { display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* ── Modals ── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .modal-box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      width: 100%; max-width: 480px;
+      max-height: 90dvh; overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+    .scale-in { animation: scaleIn 0.2s ease; }
+    @keyframes scaleIn { from { transform: scale(0.94); opacity:0; } to { transform: scale(1); opacity:1; } }
+
+    /* ── Primary & Secondary Buttons ── */
+    .btn-primary {
+      width: 100%; padding: 13px;
+      background: var(--brand); color: white;
+      border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s;
+      font-family: inherit;
+    }
+    .btn-primary:hover  { background: var(--brand-dark); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary {
+      width: 100%; padding: 13px;
+      background: #1e293b; color: #94a3b8;
+      border: 1px solid #334155; border-radius: 12px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+      font-family: inherit;
+    }
+    .btn-secondary:hover { background: #334155; color: #e2e8f0; }
+
+    /* ── Lang toggle ── */
+    .lang-active {
+      background: var(--brand) !important; color: #fff !important;
+    }
+
+    /* ── Section scrollable ── */
+    .view-section {
+      flex: 1; overflow-y: auto; padding: 16px;
+    }
+    #view-pos.view-section {
+      overflow: hidden; display: flex; flex-direction: column; padding: 0;
+    }
+    @media (min-width: 1024px) { .view-section { padding: 24px; } }
+    @media (min-width: 1024px) { #view-pos.view-section { padding: 0; } }
+
+    /* ── Success check animation ── */
+    @keyframes checkBounce {
+      0%   { transform: scale(0); opacity: 0; }
+      60%  { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .check-anim { animation: checkBounce 0.4s ease forwards; }
+
+    /* ══════════════════════════════════════════════════════════
+       THERMAL RECEIPT PRINT STYLES
+    ══════════════════════════════════════════════════════════ */
+    #receipt-print { display: none; }
+
+    @media print {
+      /* Hide everything except the receipt */
+      body > * { display: none !important; }
+      #receipt-print {
+        display: block !important;
+        position: fixed !important;
+        top: 0 !important; left: 0 !important;
+        width: 80mm !important;
+        font-family: 'Courier New', monospace !important;
+        font-size: 11pt !important;
+        color: #000 !important;
+        background: #fff !important;
+        padding: 4mm !important;
+      }
+      @page {
+        size: 80mm auto;
+        margin: 0;
+      }
+    }
+
+    /* ── Misc utility ── */
+    .divider { border: none; border-top: 1px solid #1e293b; margin: 12px 0; }
+    html:not(.dark) .divider { border-color: #e2e8f0; }
+    .section-title { font-size: 18px; font-weight: 700; color: #e2e8f0; margin-bottom: 16px; }
+    html:not(.dark) .section-title { color: #1e293b; }
+    .payment-option input[type="radio"] { accent-color: var(--brand); }
+    .payment-label {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-radius: 10px;
+      border: 1.5px solid #334155; cursor: pointer; transition: all 0.15s;
+    }
+    .payment-label:has(input:checked) { border-color: var(--brand); background: rgba(99,102,241,0.1); }
+    html:not(.dark) .payment-label { border-color: #cbd5e1; }
+  </style>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- ═══════════════ TOP BAR ═══════════════ -->
+  <header class="topbar">
+    <div class="topbar-logo">S</div>
+    <span class="store-name-label font-bold text-slate-100 text-sm flex-1">Shady Store</span>
+
+    <!-- Language Toggle -->
+    <div class="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+      <button id="btn-lang-en" onclick="setLanguage('en')"
+        class="lang-active px-2.5 py-1 rounded-md text-xs font-bold transition-all text-slate-300">EN</button>
+      <button id="btn-lang-ar" onclick="setLanguage('ar')"
+        class="px-2.5 py-1 rounded-md text-xs font-bold transition-all text-slate-300">AR</button>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 transition-all ms-1">
+      <i id="theme-icon" class="fa-solid fa-sun text-sm"></i>
+    </button>
+  </header>
+
+  <!-- ═══════════════ MAIN ═══════════════ -->
+  <div id="main-content">
+
+    <!-- Desktop Sidebar Nav -->
+    <nav class="sidebar">
+      <div class="mb-4 px-3">
+        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">Menu</p>
+      </div>
+      <button class="sidebar-nav-btn nav-btn nav-active" data-view="pos" onclick="navigate('pos')">
+        <i class="fa-solid fa-cash-register"></i>
+        <span data-t="nav_pos">Point of Sale</span>
+      </button>
+      <button class="sidebar-nav-btn nav-btn" data-view="dashboard" onclick="navigate('dashboard')">
+        <i class="fa-solid fa-chart-line"></i>
+        <span data-t="nav_dashboard">Dashboard</span>
+      </button>
+      <button class="sidebar-nav-btn nav-btn" data-view="products" onclick="navigate('products')">
+        <i class="fa-solid fa-box"></i>
+        <span data-t="nav_products">Products</span>
+      </button>
+      <button class="sidebar-nav-btn nav-btn" data-view="categories" onclick="navigate('categories')">
+        <i class="fa-solid fa-tags"></i>
+        <span data-t="nav_categories">Categories</span>
+      </button>
+      <button class="sidebar-nav-btn nav-btn" data-view="settings" onclick="navigate('settings')">
+        <i class="fa-solid fa-gear"></i>
+        <span data-t="nav_settings">Settings</span>
+      </button>
+    </nav>
+
+    <!-- View Container -->
+    <div id="view-container">
+
+      <!-- ═══ VIEW: POS ═══ -->
+      <div id="view-pos" class="view-section hidden" style="padding:0;">
+        <div id="pos-layout" style="display:flex;flex:1;overflow:hidden;height:100%;">
+
+          <!-- Products panel -->
+          <div id="pos-products-panel">
+            <!-- Search -->
+            <div class="relative mb-3">
+              <i class="fa-solid fa-magnifying-glass absolute start-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+              <input id="pos-search" type="text" data-t-placeholder="search_placeholder"
+                placeholder="Search products or scan barcode…"
+                class="form-input ps-9" autocomplete="off" />
+            </div>
+
+            <!-- Category filters -->
+            <div id="category-filters" class="mb-4"></div>
+
+            <!-- Product grid -->
+            <div id="product-grid"></div>
+          </div>
+
+          <!-- Desktop Cart Panel -->
+          <div class="cart-panel-desktop" id="cart-panel-desktop">
+            <div class="cart-header">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-cart-shopping text-indigo-400"></i>
+                <span class="font-bold text-slate-100" data-t="cart_title">Cart</span>
+              </div>
+              <button onclick="cartClear()" class="text-slate-500 hover:text-red-400 text-xs font-medium transition-colors" data-t="clear_cart">Clear</button>
+            </div>
+            <div id="cart-items" class="flex-1 overflow-y-auto px-3 py-2"></div>
+            <div id="cart-footer" class="hidden" style="padding:12px 16px;border-top:1px solid #1e293b;">
+              <div class="cart-total-row"><span data-t="subtotal">Subtotal</span><span id="cart-subtotal">—</span></div>
+              <div class="cart-total-row"><span data-t="tax">Tax</span><span id="cart-tax">—</span></div>
+              <div class="cart-grand-total"><span data-t="total">Total</span><span id="cart-total">—</span></div>
+              <button onclick="openCheckout()" class="btn-primary" data-t="checkout">Checkout</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /view-pos -->
+
+      <!-- ═══ VIEW: DASHBOARD ═══ -->
+      <div id="view-dashboard" class="view-section hidden">
+        <div class="section-title" data-t="dashboard_title">Dashboard</div>
+
+        <!-- Stats grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <div class="stat-card">
+            <div class="stat-label" data-t="today_revenue">Today's Revenue</div>
+            <div class="stat-value text-indigo-400" id="dash-revenue">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label" data-t="today_orders">Today's Orders</div>
+            <div class="stat-value text-sky-400" id="dash-orders">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label" data-t="today_profit">Today's Profit</div>
+            <div class="stat-value text-emerald-400" id="dash-profit">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label" data-t="low_stock_alerts">Low Stock</div>
+            <div class="stat-value text-amber-400" id="dash-low">—</div>
+          </div>
+        </div>
+
+        <!-- Two-col layout on desktop -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <!-- Sales History -->
+          <div class="lg:col-span-2 card overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+              <div class="font-bold text-slate-100" data-t="sales_history">Sales History</div>
+              <button onclick="exportSalesCSV()" class="action-btn">
+                <i class="fa-solid fa-download me-1"></i><span data-t="export_csv">Export CSV</span>
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th data-t="date">Date</th>
+                    <th data-t="order_id">Order #</th>
+                    <th data-t="items_count">Items</th>
+                    <th data-t="revenue">Revenue</th>
+                    <th data-t="profit">Profit</th>
+                    <th data-t="payment">Payment</th>
+                    <th data-t="actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="sales-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Low Stock Alerts -->
+          <div class="card">
+            <div class="font-bold text-slate-100 mb-3" data-t="low_stock_alerts">Low Stock Alerts</div>
+            <div id="low-stock-list"></div>
+          </div>
+        </div>
+      </div><!-- /view-dashboard -->
+
+      <!-- ═══ VIEW: PRODUCTS ═══ -->
+      <div id="view-products" class="view-section hidden">
+        <div class="flex items-center justify-between mb-4">
+          <div class="section-title mb-0" data-t="products_title">Products</div>
+          <button onclick="openProductModal()" class="btn-primary" style="width:auto;padding:9px 16px;font-size:13px;">
+            <i class="fa-solid fa-plus me-2"></i><span data-t="add_product">Add Product</span>
+          </button>
+        </div>
+
+        <!-- Product search -->
+        <div class="relative mb-4">
+          <i class="fa-solid fa-magnifying-glass absolute start-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+          <input id="prod-search" type="text" data-t-placeholder="search_products"
+            placeholder="Search products…" class="form-input ps-9"
+            oninput="renderProductsAdmin()" />
+        </div>
+
+        <div class="card overflow-hidden p-0">
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-t="product_name">Name</th>
+                  <th data-t="category">Category</th>
+                  <th data-t="barcode">Barcode</th>
+                  <th data-t="stock">Stock</th>
+                  <th data-t="cost_price">Cost</th>
+                  <th data-t="selling_price">Selling</th>
+                  <th data-t="actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="products-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /view-products -->
+
+      <!-- ═══ VIEW: CATEGORIES ═══ -->
+      <div id="view-categories" class="view-section hidden">
+        <div class="flex items-center justify-between mb-4">
+          <div class="section-title mb-0" data-t="categories_title">Categories</div>
+          <button onclick="openCategoryModal()" class="btn-primary" style="width:auto;padding:9px 16px;font-size:13px;">
+            <i class="fa-solid fa-plus me-2"></i><span data-t="add_category">Add Category</span>
+          </button>
+        </div>
+        <div id="categories-list" class="max-w-lg"></div>
+      </div><!-- /view-categories -->
+
+      <!-- ═══ VIEW: SETTINGS ═══ -->
+      <div id="view-settings" class="view-section hidden">
+        <div class="section-title" data-t="settings_title">Settings</div>
+        <div class="max-w-lg space-y-4">
+          <div class="card">
+            <div class="space-y-4">
+              <div>
+                <label class="form-label" data-t="store_name">Store Name</label>
+                <input id="set-storename" type="text" class="form-input" />
+              </div>
+              <div>
+                <label class="form-label" data-t="tax_rate">Tax Rate (%)</label>
+                <input id="set-tax" type="number" min="0" max="100" step="0.1" class="form-input" />
+              </div>
+              <div>
+                <label class="form-label" data-t="currency">Currency</label>
+                <input id="set-currency" type="text" maxlength="10" class="form-input" />
+              </div>
+              <div>
+                <label class="form-label">Cashier Name</label>
+                <input id="set-cashier" type="text" class="form-input" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Language -->
+          <div class="card">
+            <div class="form-label mb-3" data-t="language">Language</div>
+            <div class="flex gap-3">
+              <button id="btn-lang-en2" onclick="setLanguage('en')"
+                class="lang-active flex-1 py-2.5 rounded-xl border border-slate-600 text-sm font-bold transition-all text-slate-300">
+                🇺🇸 English
+              </button>
+              <button id="btn-lang-ar2" onclick="setLanguage('ar')"
+                class="flex-1 py-2.5 rounded-xl border border-slate-600 text-sm font-bold transition-all text-slate-300">
+                🇪🇬 العربية
+              </button>
+            </div>
+          </div>
+
+          <button onclick="saveSettings()" class="btn-primary">
+            <i class="fa-solid fa-floppy-disk me-2"></i><span data-t="save_settings">Save Settings</span>
+          </button>
+        </div>
+      </div><!-- /view-settings -->
+
+    </div><!-- /view-container -->
+  </div><!-- /main-content -->
+
+  <!-- ═══════════════ BOTTOM NAV (mobile) ═══════════════ -->
+  <nav class="bottom-nav">
+    <button class="nav-btn nav-active" data-view="pos" onclick="navigate('pos')">
+      <i class="fa-solid fa-cash-register"></i>
+      <span data-t="nav_pos">POS</span>
+    </button>
+    <button class="nav-btn" data-view="dashboard" onclick="navigate('dashboard')">
+      <i class="fa-solid fa-chart-line"></i>
+      <span data-t="nav_dashboard">Dashboard</span>
+    </button>
+    <button class="nav-btn" data-view="products" onclick="navigate('products')">
+      <i class="fa-solid fa-box"></i>
+      <span data-t="nav_products">Products</span>
+    </button>
+    <button class="nav-btn" data-view="categories" onclick="navigate('categories')">
+      <i class="fa-solid fa-tags"></i>
+      <span data-t="nav_categories">Categories</span>
+    </button>
+    <button class="nav-btn" data-view="settings" onclick="navigate('settings')">
+      <i class="fa-solid fa-gear"></i>
+      <span data-t="nav_settings">Settings</span>
+    </button>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- ═══════════════ MOBILE CART FAB & DRAWER ═══════════════ -->
+<button id="cart-fab" onclick="toggleCart()">
+  <i class="fa-solid fa-cart-shopping"></i>
+  <span id="cart-fab-label" data-t="cart_title">Cart</span>
+  <span id="cart-badge" class="hidden bg-white text-indigo-600 rounded-full text-xs font-bold w-5 h-5 flex items-center justify-center">0</span>
+</button>
+
+<!-- Cart overlay -->
+<div id="cart-overlay" class="hidden" onclick="toggleCart(false)"></div>
+
+<!-- Cart drawer (mobile only) -->
+<div id="cart-drawer">
+  <div class="cart-header">
+    <!-- Drag handle -->
+    <div class="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-600 rounded-full"></div>
+    <div class="flex items-center gap-2 pt-2">
+      <i class="fa-solid fa-cart-shopping text-indigo-400"></i>
+      <span class="font-bold text-slate-100" data-t="cart_title">Cart</span>
+    </div>
+    <div class="flex items-center gap-3 pt-2">
+      <button onclick="cartClear()" class="text-slate-500 hover:text-red-400 text-xs font-medium transition-colors" data-t="clear_cart">Clear</button>
+      <button onclick="toggleCart(false)" class="w-7 h-7 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+  </div>
+  <!-- Shared cart items — rendered into desktop panel, mirrored here via JS -->
+  <div id="cart-items-mobile" class="flex-1 overflow-y-auto px-3 py-2 text-sm text-slate-400 flex items-center justify-center">
+    <!-- Populated by renderCartMobile() -->
+  </div>
+  <div id="cart-footer-mobile" class="hidden" style="padding:12px 16px;border-top:1px solid #1e293b;">
+    <div class="cart-total-row"><span data-t="subtotal">Subtotal</span><span id="cart-subtotal-m">—</span></div>
+    <div class="cart-total-row"><span data-t="tax">Tax</span><span id="cart-tax-m">—</span></div>
+    <div class="cart-grand-total"><span data-t="total">Total</span><span id="cart-total-m">—</span></div>
+    <button onclick="toggleCart(false); openCheckout();" class="btn-primary" data-t="checkout">Checkout</button>
+  </div>
+</div>
+
+<!-- ═══════════════ CHECKOUT MODAL ═══════════════ -->
+<div id="checkout-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-bold text-slate-100" data-t="checkout_title">Complete Sale</h2>
+      <button onclick="closeModal('checkout-modal')" class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Checkout form -->
+    <div id="co-form">
+      <!-- Payment Method -->
+      <div class="mb-5">
+        <div class="form-label mb-2" data-t="payment_method">Payment Method</div>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="payment-label payment-option">
+            <input type="radio" name="payment" value="cash" checked />
+            <i class="fa-solid fa-money-bill-wave text-emerald-400"></i>
+            <span data-t="cash">Cash</span>
+          </label>
+          <label class="payment-label payment-option">
+            <input type="radio" name="payment" value="card" />
+            <i class="fa-solid fa-credit-card text-sky-400"></i>
+            <span data-t="card">Card</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Totals -->
+      <div class="bg-slate-900/50 rounded-xl p-4 mb-5 space-y-2">
+        <div class="flex justify-between text-sm text-slate-400"><span data-t="subtotal">Subtotal</span><span id="co-subtotal">—</span></div>
+        <div class="flex justify-between text-sm text-slate-400"><span data-t="tax">Tax</span><span id="co-tax">—</span></div>
+        <div class="flex justify-between text-base font-bold text-slate-100 pt-2 border-t border-slate-700">
+          <span data-t="total">Total</span><span id="co-total">—</span>
+        </div>
+      </div>
+
+      <!-- Tendered -->
+      <div class="mb-4">
+        <label class="form-label" data-t="amount_tendered">Amount Tendered</label>
+        <input id="co-tendered" type="number" step="0.01" class="form-input text-lg font-bold" />
+      </div>
+      <div class="flex justify-between text-sm text-slate-300 mb-5">
+        <span data-t="change">Change</span>
+        <span id="co-change" class="font-bold text-emerald-400">—</span>
+      </div>
+
+      <button onclick="completeSale()" class="btn-primary">
+        <i class="fa-solid fa-check me-2"></i><span data-t="complete_sale">Complete Sale</span>
+      </button>
+    </div>
+
+    <!-- Sale result panel -->
+    <div id="co-result" class="hidden text-center">
+      <div class="check-anim w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-4xl"></i>
+      </div>
+      <h3 class="text-xl font-bold text-slate-100 mb-1" data-t="sale_complete">Sale Complete!</h3>
+      <p id="co-res-order" class="text-slate-400 text-sm mb-5"></p>
+
+      <div class="bg-slate-900/50 rounded-xl p-4 mb-5 space-y-2 text-start">
+        <div class="flex justify-between text-sm text-slate-400"><span data-t="total">Total</span><span id="co-res-total" class="font-bold text-slate-100">—</span></div>
+        <div class="flex justify-between text-sm text-slate-400"><span data-t="payment">Payment</span><span id="co-res-method">—</span></div>
+        <div class="flex justify-between text-sm text-slate-400"><span data-t="change">Change</span><span id="co-res-change" class="font-bold text-emerald-400">—</span></div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="printReceipt(state.currentSale)" class="btn-secondary text-sm">
+          <i class="fa-solid fa-print me-2"></i><span data-t="print_receipt">Print Receipt</span>
+        </button>
+        <button onclick="closeModal('checkout-modal')" class="btn-primary text-sm">
+          <i class="fa-solid fa-plus me-2"></i><span data-t="new_sale">New Sale</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PRODUCT MODAL ═══════════════ -->
+<div id="product-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="product-modal-title" class="text-lg font-bold text-slate-100" data-t="add_product">Add Product</h2>
+      <button onclick="closeModal('product-modal')" class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <form id="product-form" onsubmit="event.preventDefault(); saveProduct();">
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">Name (EN)</label>
+            <input id="pf-name" type="text" class="form-input" required />
+          </div>
+          <div>
+            <label class="form-label">الاسم (AR)</label>
+            <input id="pf-name-ar" type="text" class="form-input" dir="rtl" />
+          </div>
+        </div>
+        <div>
+          <label class="form-label" data-t="category">Category</label>
+          <select id="pf-category" class="form-input" required></select>
+        </div>
+        <div>
+          <label class="form-label" data-t="barcode">Barcode</label>
+          <div class="flex gap-2">
+            <input id="pf-barcode" type="text" class="form-input flex-1" />
+            <button type="button" onclick="generateBarcode()" class="action-btn whitespace-nowrap" data-t="generate_barcode">Generate</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="form-label" data-t="stock">Stock</label>
+            <input id="pf-stock" type="number" min="0" class="form-input" value="0" required />
+          </div>
+          <div>
+            <label class="form-label" data-t="cost_price">Cost</label>
+            <input id="pf-cost" type="number" min="0" step="0.01" class="form-input" value="0" required />
+          </div>
+          <div>
+            <label class="form-label" data-t="selling_price">Selling</label>
+            <input id="pf-selling" type="number" min="0" step="0.01" class="form-input" value="0" required />
+          </div>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" onclick="closeModal('product-modal')" class="btn-secondary text-sm" data-t="cancel">Cancel</button>
+          <button type="submit" class="btn-primary text-sm" data-t="save">Save</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ CATEGORY MODAL ═══════════════ -->
+<div id="category-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="cat-modal-title" class="text-lg font-bold text-slate-100" data-t="add_category">Add Category</h2>
+      <button onclick="closeModal('category-modal')" class="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <form id="cat-form" onsubmit="event.preventDefault(); saveCategory();">
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">Name (EN)</label>
+            <input id="cf-name" type="text" class="form-input" required />
+          </div>
+          <div>
+            <label class="form-label">الاسم (AR)</label>
+            <input id="cf-name-ar" type="text" class="form-input" dir="rtl" />
+          </div>
+        </div>
+        <div>
+          <label class="form-label" data-t="category_icon">Icon (Emoji)</label>
+          <input id="cf-icon" type="text" maxlength="4" class="form-input text-2xl" placeholder="📦" />
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" onclick="closeModal('category-modal')" class="btn-secondary text-sm" data-t="cancel">Cancel</button>
+          <button type="submit" class="btn-primary text-sm" data-t="save">Save</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ RECEIPT (print target) ═══════════════ -->
+<div id="receipt-print"></div>
+
+<!-- Scripts -->
+<script src="./translations.js"></script>
+<script src="./app.js"></script>
+
+<!-- Mobile cart mirror script (renders cart items into the drawer) -->
+<script>
+// Override renderCart to also populate mobile drawer
+const _origRenderCart = renderCart;
+window.renderCart = function() {
+  _origRenderCart();
+  renderCartMobile();
+};
+
+function renderCartMobile() {
+  const mEl = document.getElementById("cart-items-mobile");
+  const mFt = document.getElementById("cart-footer-mobile");
+  if (!mEl) return;
+
+  if (state.cart.length === 0) {
+    mEl.innerHTML = `<div class="flex flex-col items-center justify-center py-10 text-slate-400">
+      <i class="fa-solid fa-cart-shopping text-4xl mb-2 opacity-30"></i>
+      <p class="text-sm font-medium">${t("cart_empty")}</p>
+    </div>`;
+    mFt?.classList.add("hidden");
+    return;
+  }
+
+  mFt?.classList.remove("hidden");
+  mEl.innerHTML = state.cart.map(item => {
+    const p    = state.products.find(x => x.id === item.productId);
+    if (!p) return "";
+    const name = state.lang === "ar" ? (p.nameAr || p.name) : p.name;
+    const line = p.sellingPrice * item.qty;
+    return `
+      <div class="cart-item">
+        <div class="cart-item-name">${name}</div>
+        <div class="cart-item-controls">
+          <button onclick="cartSetQty('${p.id}', ${item.qty - 1})" class="qty-btn"><i class="fa-solid fa-minus text-xs"></i></button>
+          <input type="number" value="${item.qty}" min="1" max="${p.stock}" onchange="cartSetQty('${p.id}', this.value)" class="qty-input" />
+          <button onclick="cartSetQty('${p.id}', ${item.qty + 1})" class="qty-btn"><i class="fa-solid fa-plus text-xs"></i></button>
+          <button onclick="cartRemove('${p.id}')" class="remove-btn"><i class="fa-solid fa-trash-can text-xs"></i></button>
+        </div>
+        <div class="cart-item-price">${fmt(line)}</div>
+      </div>`;
+  }).join("");
+
+  const { subtotal, taxAmt, total } = cartTotals();
+  const sm = document.getElementById("cart-subtotal-m");
+  const tm = document.getElementById("cart-tax-m");
+  const tt = document.getElementById("cart-total-m");
+  if (sm) sm.textContent = fmt(subtotal);
+  if (tm) tm.textContent = fmt(taxAmt);
+  if (tt) tt.textContent = fmt(total);
+}
+</script>
+</body>
+</html>

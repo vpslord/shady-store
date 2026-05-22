@@ -1,0 +1,41 @@
+{
+  "name": "Shady Store POS",
+  "short_name": "Shady Store",
+  "description": "A fast, offline-ready Point of Sale system for Shady Store.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%236366f1'/%3E%3Ctext x='256' y='340' font-size='280' text-anchor='middle' font-family='Georgia,serif' fill='white'%3ES%3C/text%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "shopping"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Open POS",
+      "short_name": "POS",
+      "description": "Open the Point of Sale screen",
+      "url": "./index.html#pos",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
